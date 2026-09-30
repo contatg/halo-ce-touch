@@ -146,46 +146,46 @@ static void overlay_add_stick(float x, float y, float radius)
 
 static int load_touch_texture(TouchTexture *texture, const char *path)
 {
-        SDL_RWops *rw;
+        SDL_IOStream *io;
         Sint64 size;
-        unsigned char *data;
-        int channels;
+        void *data;
+        int width, height, channels;
         unsigned char *pixels;
 
         memset(texture, 0, sizeof(*texture));
 
-        rw = SDL_RWFromFile(path, "rb");
-        if (!rw)
+        io = SDL_IOFromFile(path, "rb");
+        if (!io)
                 return 0;
 
-        size = SDL_RWsize(rw);
+        size = SDL_GetIOSize(io);
         if (size <= 0 || size > 64 * 1024 * 1024)
         {
-                SDL_RWclose(rw);
+                SDL_CloseIO(io);
                 return 0;
         }
 
-        data = (unsigned char *)malloc((size_t)size);
+        data = malloc((size_t)size);
         if (!data)
         {
-                SDL_RWclose(rw);
+                SDL_CloseIO(io);
                 return 0;
         }
 
-        if (SDL_RWread(rw, data, 1, (size_t)size) != (size_t)size)
+        if (SDL_ReadIO(io, data, (size_t)size) != (size_t)size)
         {
                 free(data);
-                SDL_RWclose(rw);
+                SDL_CloseIO(io);
                 return 0;
         }
 
-        SDL_RWclose(rw);
+        SDL_CloseIO(io);
 
         pixels = stbi_load_from_memory(
-                data,
+                (const unsigned char *)data,
                 (int)size,
-                &texture->width,
-                &texture->height,
+                &width,
+                &height,
                 &channels,
                 4);
 
@@ -194,8 +194,8 @@ static int load_touch_texture(TouchTexture *texture, const char *path)
         if (!pixels)
                 return 0;
 
-        glGenTextures(1, &texture->texture);
-        glBindTexture(GL_TEXTURE_2D, texture->texture);
+        glGenTextures(1, &texture->id);
+        glBindTexture(GL_TEXTURE_2D, texture->id);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -206,18 +206,19 @@ static int load_touch_texture(TouchTexture *texture, const char *path)
                 GL_TEXTURE_2D,
                 0,
                 GL_RGBA,
-                texture->width,
-                texture->height,
+                width,
+                height,
                 0,
                 GL_RGBA,
                 GL_UNSIGNED_BYTE,
                 pixels);
 
-        glBindTexture(GL_TEXTURE_2D, 0);
-
         stbi_image_free(pixels);
 
+        texture->width = width;
+        texture->height = height;
         texture->loaded = 1;
+
         return 1;
 }
 
