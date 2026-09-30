@@ -540,10 +540,19 @@ def generate_android_build(n: Writer, sln: Any) -> None:
 
     staged_sdl = jni_dir / "libSDL3.so"
     staged_image = assets_dir / "halo_guest.elf"
+    touch_controls = PORT_DIR / "app" / "src" / "main" / "assets" / "touch_controls"
+    staged_touch_controls = assets_dir / "touch_controls"
+
     n.rule(name="android_copy", command="cp $in $out", description="ANDROID STAGE $out")
+    n.rule(name="android_copy_dir",
+           command="mkdir -p $out && cp -r $in/. $out/",
+           description="ANDROID STAGE DIR $out")
+
     n.build(outputs=staged_sdl, rule="android_copy", inputs=libsdl)
     n.build(outputs=staged_image, rule="android_copy", inputs=image)
-    n.build(outputs="android", rule="phony", inputs=[libmain, staged_sdl, staged_image])
+    n.build(outputs=staged_touch_controls, rule="android_copy_dir", inputs=touch_controls)
+    n.build(outputs="android", rule="phony",
+           inputs=[libmain, staged_sdl, staged_image, staged_touch_controls])
 
     apk = PORT_DIR / "app" / "build" / "outputs" / "apk" / "debug" / "app-debug.apk"
     n.rule(
