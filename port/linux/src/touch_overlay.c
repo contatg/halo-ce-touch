@@ -71,11 +71,6 @@ static const char *overlay_fragment_shader =
         "out vec4 frag_color;\n"
         "void main() {\n"
         "    frag_color = texture(u_tex, v_uv);\n"
-        "}\n";\n"
-        "uniform vec4 u_color;\n"
-        "out vec4 frag_color;\n"
-        "void main() {\n"
-        "    frag_color = u_color;\n"
         "}\n";
 
 static GLuint compile_shader(GLenum type, const char *source)
@@ -194,8 +189,8 @@ static int load_touch_texture(TouchTexture *texture, const char *path)
         if (!pixels)
                 return 0;
 
-        glGenTextures(1, &texture->id);
-        glBindTexture(GL_TEXTURE_2D, texture->id);
+        glGenTextures(1, &texture->texture);
+        glBindTexture(GL_TEXTURE_2D, texture->texture);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
