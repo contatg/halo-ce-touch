@@ -7,7 +7,7 @@
 
 #include <math.h>
 #include <string.h>
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../third_party/stb/stb_image.h"
