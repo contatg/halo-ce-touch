@@ -553,7 +553,9 @@ BOOL platform_video_initialize(unsigned long width, unsigned long height)
         if (!gl_functions_load())
                 return FALSE;
 
+#ifdef HALO_ANDROID
         touch_overlay_init();
+#endif
         version = SDL_GL_SetSwapInterval(config_boolean("display.vsync") ? 1 : 0);
 	(void)version;
 	platform_event_thread = SDL_GetCurrentThreadID();
