@@ -193,6 +193,66 @@ static void keyboard_gamepad(const struct platform_input_state *input, XINPUT_GA
 	pad->bAnalogButtons[XINPUT_GAMEPAD_BLACK] |= analog(k[SDL_SCANCODE_X]);
 	pad->bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] |= analog(k[SDL_SCANCODE_G] || (mouse && m[SDL_BUTTON_RIGHT]));
 	pad->bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] |= analog(mouse && m[SDL_BUTTON_LEFT]);
+
+#ifdef HALO_ANDROID
+        /* Touchscreen virtual controller */
+
+        if (fabsf(input->touch_lx) > 0.0f ||
+                fabsf(input->touch_ly) > 0.0f)
+        {
+                SHORT x = (SHORT)(input->touch_lx * 32767.0f);
+                SHORT y = (SHORT)(input->touch_ly * 32767.0f);
+
+                if (abs(x) > abs(pad->sThumbLX))
+                        pad->sThumbLX = x;
+
+                if (abs(y) > abs(pad->sThumbLY))
+                        pad->sThumbLY = y;
+        }
+
+        if (fabsf(input->touch_rx) > 0.0f ||
+                fabsf(input->touch_ry) > 0.0f)
+        {
+                SHORT x = (SHORT)(input->touch_rx * 32767.0f);
+                SHORT y = (SHORT)(input->touch_ry * 32767.0f);
+
+                if (abs(x) > abs(pad->sThumbRX))
+                        pad->sThumbRX = x;
+
+                if (abs(y) > abs(pad->sThumbRY))
+                        pad->sThumbRY = y;
+        }
+
+        if (input->touch_start)
+                pad->wButtons |= XINPUT_GAMEPAD_START;
+
+        if (input->touch_back)
+                pad->wButtons |= XINPUT_GAMEPAD_BACK;
+
+        if (input->touch_a)
+                pad->bAnalogButtons[XINPUT_GAMEPAD_A] = 0xff;
+
+        if (input->touch_b)
+                pad->bAnalogButtons[XINPUT_GAMEPAD_B] = 0xff;
+
+        if (input->touch_x)
+                pad->bAnalogButtons[XINPUT_GAMEPAD_X] = 0xff;
+
+        if (input->touch_y)
+                pad->bAnalogButtons[XINPUT_GAMEPAD_Y] = 0xff;
+
+        if (input->touch_lb)
+                pad->bAnalogButtons[XINPUT_GAMEPAD_WHITE] = 0xff;
+
+        if (input->touch_rb)
+                pad->bAnalogButtons[XINPUT_GAMEPAD_BLACK] = 0xff;
+
+        if (input->touch_lt)
+                pad->bAnalogButtons[XINPUT_GAMEPAD_LEFT_TRIGGER] = 0xff;
+
+        if (input->touch_rt)
+                pad->bAnalogButtons[XINPUT_GAMEPAD_RIGHT_TRIGGER] = 0xff;
+#endif
 }
 
 /* A scroll of the wheel switches weapons once: it holds Y for WHEEL_PRESS_MS

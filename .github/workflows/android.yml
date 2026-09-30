@@ -1,0 +1,61 @@
+name: Build Android
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3 ninja-build clang git curl unzip
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK 30
+        run: |
+          NDK_PACKAGE=$(sdkmanager --list 2>/dev/null | \
+            awk '$1 ~ /^ndk;30(\.|$)/ {print $1}' | \
+            sort -V | tail -n 1)
+
+          echo "Using NDK: $NDK_PACKAGE"
+          test -n "$NDK_PACKAGE"
+          sdkmanager "$NDK_PACKAGE"
+
+          NDK_VERSION="${NDK_PACKAGE#ndk;}"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/$NDK_VERSION" >> "$GITHUB_ENV"
+
+      - name: Configure
+        run: |
+          python3 configure.py --android-ndk "$ANDROID_NDK_HOME"
+
+      - name: Build Android
+        run: |
+          ninja android
+
+      - name: Show build outputs
+        run: |
+          find build -type f \( \
+            -name "*.apk" -o \
+            -name "*.so" -o \
+            -name "*.elf" \
+          \) -print
+
+      - name: Upload Android build
+        uses: actions/upload-artifact@v4
+        with:
+          name: halo-android-touch
+          path: |
+            build/**/*.apk
+            build/**/*.so
+            build/**/*.elf
+          if-no-files-found: warn

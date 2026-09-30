@@ -23,6 +23,26 @@ struct platform_input_state
 	/* the mouse drives the menus' pointer (platform_ui_pointer_set_active)
 	instead of the controller */
 	BOOL ui_pointer;
+
+#ifdef HALO_ANDROID
+        BOOL touch_a;
+        BOOL touch_b;
+        BOOL touch_x;
+        BOOL touch_y;
+
+        BOOL touch_lb;
+        BOOL touch_rb;
+        BOOL touch_lt;
+        BOOL touch_rt;
+
+        BOOL touch_start;
+        BOOL touch_back;
+
+        float touch_lx;
+        float touch_ly;
+        float touch_rx;
+        float touch_ry;
+#endif
 };
 
 struct platform_keystroke

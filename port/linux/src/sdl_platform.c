@@ -30,6 +30,159 @@ static struct platform_input_state input_state;
 /* keys pressed since the last read, so a press and release between two
 reads still counts as a press (input injected on Android, or a slow frame) */
 static unsigned char keys_pressed[SDL_SCANCODE_COUNT];
+
+#ifdef HALO_ANDROID
+
+#define TOUCH_FINGER_NONE ((SDL_FingerID)-1)
+#define TOUCH_STICK_RADIUS 0.16f
+
+static SDL_FingerID touch_left_finger = TOUCH_FINGER_NONE;
+static SDL_FingerID touch_right_finger = TOUCH_FINGER_NONE;
+
+static float touch_left_origin_x;
+static float touch_left_origin_y;
+static float touch_right_origin_x;
+static float touch_right_origin_y;
+
+static float touch_clamp_stick(float value)
+{
+        if (value < -1.0f)
+                return -1.0f;
+        if (value > 1.0f)
+                return 1.0f;
+        return value;
+}
+
+static void touch_update_stick(
+        float x, float y,
+        float origin_x, float origin_y,
+        float *stick_x, float *stick_y)
+{
+        float dx = (x - origin_x) / TOUCH_STICK_RADIUS;
+        float dy = (origin_y - y) / TOUCH_STICK_RADIUS;
+
+        *stick_x = touch_clamp_stick(dx);
+        *stick_y = touch_clamp_stick(dy);
+}
+
+static void touch_clear(void)
+{
+        touch_left_finger = TOUCH_FINGER_NONE;
+        touch_right_finger = TOUCH_FINGER_NONE;
+
+        input_state.touch_lx = 0.0f;
+        input_state.touch_ly = 0.0f;
+        input_state.touch_rx = 0.0f;
+        input_state.touch_ry = 0.0f;
+
+        input_state.touch_a = FALSE;
+        input_state.touch_b = FALSE;
+        input_state.touch_x = FALSE;
+        input_state.touch_y = FALSE;
+        input_state.touch_lb = FALSE;
+        input_state.touch_rb = FALSE;
+        input_state.touch_lt = FALSE;
+        input_state.touch_rt = FALSE;
+        input_state.touch_start = FALSE;
+        input_state.touch_back = FALSE;
+}
+
+static void touch_button_at(float x, float y, BOOL down)
+{
+        if (x > 0.75f && y > 0.58f && y < 0.78f)
+                input_state.touch_a = down;
+        else if (x > 0.86f && y > 0.48f && y < 0.66f)
+                input_state.touch_b = down;
+        else if (x > 0.69f && y > 0.48f && y < 0.66f)
+                input_state.touch_x = down;
+        else if (x > 0.77f && y > 0.37f && y < 0.54f)
+                input_state.touch_y = down;
+        else if (x > 0.70f && x < 0.84f && y < 0.25f)
+                input_state.touch_lb = down;
+        else if (x >= 0.84f && y < 0.25f)
+                input_state.touch_rb = down;
+        else if (x > 0.43f && x < 0.56f && y < 0.22f)
+                input_state.touch_back = down;
+        else if (x >= 0.56f && x < 0.69f && y < 0.22f)
+                input_state.touch_start = down;
+        else if (x > 0.70f && x < 0.84f && y > 0.78f)
+                input_state.touch_lt = down;
+        else if (x >= 0.84f && y > 0.78f)
+                input_state.touch_rt = down;
+}
+
+static void touch_finger_down(SDL_FingerID finger, float x, float y)
+{
+        if (x < 0.40f && y > 0.50f &&
+                touch_left_finger == TOUCH_FINGER_NONE)
+        {
+                touch_left_finger = finger;
+                touch_left_origin_x = x;
+                touch_left_origin_y = y;
+                input_state.touch_lx = 0.0f;
+                input_state.touch_ly = 0.0f;
+                return;
+        }
+
+        if (x > 0.60f && y > 0.50f &&
+                touch_right_finger == TOUCH_FINGER_NONE)
+        {
+                touch_right_finger = finger;
+                touch_right_origin_x = x;
+                touch_right_origin_y = y;
+                input_state.touch_rx = 0.0f;
+                input_state.touch_ry = 0.0f;
+                return;
+        }
+
+        touch_button_at(x, y, TRUE);
+}
+
+static void touch_finger_motion(SDL_FingerID finger, float x, float y)
+{
+        if (finger == touch_left_finger)
+        {
+                touch_update_stick(
+                        x, y,
+                        touch_left_origin_x,
+                        touch_left_origin_y,
+                        &input_state.touch_lx,
+                        &input_state.touch_ly);
+        }
+        else if (finger == touch_right_finger)
+        {
+                touch_update_stick(
+                        x, y,
+                        touch_right_origin_x,
+                        touch_right_origin_y,
+                        &input_state.touch_rx,
+                        &input_state.touch_ry);
+        }
+}
+
+static void touch_finger_up(SDL_FingerID finger, float x, float y)
+{
+        if (finger == touch_left_finger)
+        {
+                touch_left_finger = TOUCH_FINGER_NONE;
+                input_state.touch_lx = 0.0f;
+                input_state.touch_ly = 0.0f;
+                return;
+        }
+
+        if (finger == touch_right_finger)
+        {
+                touch_right_finger = TOUCH_FINGER_NONE;
+                input_state.touch_rx = 0.0f;
+                input_state.touch_ry = 0.0f;
+                return;
+        }
+
+        touch_button_at(x, y, FALSE);
+}
+
+#endif
+
 #ifndef HALO_ANDROID
 /* the menus' pointer (platform_ui_pointer_set_active), under input_lock */
 static struct platform_ui_pointer ui_pointer;
@@ -727,7 +880,30 @@ void platform_pump_events(void)
 			}
 #endif
 			break;
-		case SDL_EVENT_MOUSE_MOTION:
+		#ifdef HALO_ANDROID
+            case SDL_EVENT_FINGER_DOWN:
+                    touch_finger_down(
+                            event.tfinger.fingerID,
+                            event.tfinger.x,
+                            event.tfinger.y);
+                    break;
+
+            case SDL_EVENT_FINGER_MOTION:
+                    touch_finger_motion(
+                            event.tfinger.fingerID,
+                            event.tfinger.x,
+                            event.tfinger.y);
+                    break;
+
+            case SDL_EVENT_FINGER_UP:
+                    touch_finger_up(
+                            event.tfinger.fingerID,
+                            event.tfinger.x,
+                            event.tfinger.y);
+                    break;
+#endif
+
+case SDL_EVENT_MOUSE_MOTION:
 #ifndef HALO_ANDROID
 			/* in the menus the mouse moves the pointer, not the view */
 			if (input_state.ui_pointer)
