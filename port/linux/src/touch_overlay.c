@@ -25,7 +25,7 @@ static GLint overlay_color;
 static GLint overlay_pos;
 
 static const char *overlay_vertex_shader =
-        "#version 320 es\n"
+        "#version 300 es\n"
         "layout(location = 0) in vec2 a_pos;\n"
         "uniform vec2 u_pos;\n"
         "void main() {\n"
@@ -33,7 +33,7 @@ static const char *overlay_vertex_shader =
         "}\n";
 
 static const char *overlay_fragment_shader =
-        "#version 320 es\n"
+        "#version 300 es\n"
         "precision mediump float;\n"
         "uniform vec4 u_color;\n"
         "out vec4 frag_color;\n"
