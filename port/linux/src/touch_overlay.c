@@ -165,36 +165,36 @@ void touch_overlay_draw(void)
         glBindVertexArray(overlay_vao);
 
         /*
-         * Left/right virtual sticks.
+         * Virtual sticks.
          */
-        overlay_add_stick(0.16f, 0.76f, 0.105f);
-        overlay_add_stick(0.84f, 0.76f, 0.105f);
+        overlay_add_stick(0.17f, 0.76f, 0.15f);
+        overlay_add_stick(0.83f, 0.76f, 0.15f);
 
         /*
-         * ABXY cluster.
+         * ABXY cluster - larger and brighter.
          */
-        overlay_add_button(0.87f, 0.64f, 0.050f, 0.32f, "A");
-        overlay_add_button(0.94f, 0.56f, 0.050f, 0.32f, "B");
-        overlay_add_button(0.80f, 0.56f, 0.050f, 0.32f, "X");
-        overlay_add_button(0.87f, 0.48f, 0.050f, 0.32f, "Y");
+        overlay_add_button(0.87f, 0.65f, 0.075f, 0.55f, "A");
+        overlay_add_button(0.95f, 0.56f, 0.075f, 0.55f, "B");
+        overlay_add_button(0.79f, 0.56f, 0.075f, 0.55f, "X");
+        overlay_add_button(0.87f, 0.47f, 0.075f, 0.55f, "Y");
 
         /*
          * Bumpers.
          */
-        overlay_add_button(0.77f, 0.14f, 0.055f, 0.30f, "LB");
-        overlay_add_button(0.92f, 0.14f, 0.055f, 0.30f, "RB");
+        overlay_add_button(0.78f, 0.15f, 0.075f, 0.50f, "LB");
+        overlay_add_button(0.92f, 0.15f, 0.075f, 0.50f, "RB");
 
         /*
          * Triggers.
          */
-        overlay_add_button(0.77f, 0.88f, 0.055f, 0.28f, "LT");
-        overlay_add_button(0.92f, 0.88f, 0.055f, 0.28f, "RT");
+        overlay_add_button(0.78f, 0.88f, 0.075f, 0.50f, "LT");
+        overlay_add_button(0.92f, 0.88f, 0.075f, 0.50f, "RT");
 
         /*
          * Back / Start.
          */
-        overlay_add_button(0.49f, 0.14f, 0.045f, 0.28f, "BACK");
-        overlay_add_button(0.625f, 0.14f, 0.045f, 0.28f, "START");
+        overlay_add_button(0.46f, 0.15f, 0.065f, 0.50f, "BACK");
+        overlay_add_button(0.60f, 0.15f, 0.065f, 0.50f, "START");
 
         glBindVertexArray(0);
         glUseProgram(0);
