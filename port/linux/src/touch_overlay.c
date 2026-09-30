@@ -141,40 +141,48 @@ static void overlay_add_stick(float x, float y, float radius)
 
 static int load_touch_texture(TouchTexture *texture, const char *path)
 {
-        SDL_IOStream *io;
-        Sint64 size;
+        FILE *file;
+        long size;
         void *data;
         int width, height, channels;
         unsigned char *pixels;
 
         memset(texture, 0, sizeof(*texture));
 
-        io = SDL_IOFromFile(path, "rb");
-        if (!io)
+        file = fopen(path, "rb");
+        if (!file)
                 return 0;
 
-        size = SDL_GetIOSize(io);
-        if (size <= 0 || size > 64 * 1024 * 1024)
+        if (fseek(file, 0, SEEK_END) != 0)
         {
-                SDL_CloseIO(io);
+                fclose(file);
                 return 0;
         }
+
+        size = ftell(file);
+        if (size <= 0 || size > 64 * 1024 * 1024)
+        {
+                fclose(file);
+                return 0;
+        }
+
+        rewind(file);
 
         data = malloc((size_t)size);
         if (!data)
         {
-                SDL_CloseIO(io);
+                fclose(file);
                 return 0;
         }
 
-        if (SDL_ReadIO(io, data, (size_t)size) != (size_t)size)
+        if (fread(data, 1, (size_t)size, file) != (size_t)size)
         {
                 free(data);
-                SDL_CloseIO(io);
+                fclose(file);
                 return 0;
         }
 
-        SDL_CloseIO(io);
+        fclose(file);
 
         pixels = stbi_load_from_memory(
                 (const unsigned char *)data,
