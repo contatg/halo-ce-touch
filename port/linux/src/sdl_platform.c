@@ -12,6 +12,7 @@ and the debug keyboard that the game's console reads.
 #include "platform.h"
 #include "sdl_platform.h"
 #include "gl.h"
+#include "touch_overlay.h"
 #include "port_config.h"
 #include "p2p.h"
 #include "xiso.h"
@@ -549,9 +550,11 @@ BOOL platform_video_initialize(unsigned long width, unsigned long height)
 		return FALSE;
 	}
 	SDL_GL_MakeCurrent(platform_window, platform_gl_context);
-	if (!gl_functions_load())
-		return FALSE;
-	version = SDL_GL_SetSwapInterval(config_boolean("display.vsync") ? 1 : 0);
+        if (!gl_functions_load())
+                return FALSE;
+
+        touch_overlay_init();
+        version = SDL_GL_SetSwapInterval(config_boolean("display.vsync") ? 1 : 0);
 	(void)version;
 	platform_event_thread = SDL_GetCurrentThreadID();
 	platform_log("OpenGL %s on %s", (const char *)glGetString(GL_VERSION), (const char *)glGetString(GL_RENDERER));
@@ -568,7 +571,10 @@ void platform_video_drawable_size(int *width, int *height)
 
 void platform_video_swap(void)
 {
-	SDL_GL_SwapWindow(platform_window);
+#ifdef HALO_ANDROID
+        touch_overlay_draw();
+#endif
+        SDL_GL_SwapWindow(platform_window);
 }
 
 void platform_mouse_capture(BOOL capture)
